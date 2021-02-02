@@ -1,11 +1,13 @@
-import org.apache.spark
-
 import java.io.File
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.col
 import sparkGamingUtils._
 
 object sparkGaming extends App{
+  val config = ConfigFactory.parseFile(new File("/home/sandy/my.conf"))
+
+  val lOutput = "D:\\M1\\Spark\\output"
 
   val lDatasetEsportHistorical = "D:\\M1\\Spark\\Projet\\sparkGaming\\src\\main\\ressources\\data\\esport\\HistoricalEsportData.csv"
   val lDatasetEsportGeneral = "D:\\M1\\Spark\\Projet\\sparkGaming\\src\\main\\ressources\\data\\esport\\GeneralEsportData.csv"
@@ -40,12 +42,16 @@ object sparkGaming extends App{
       .withColumnRenamed("game", "game2")
       .join(lDfTwitchGameData,
         col("game2") === col("game") &&
-        col("year2") === col("year") &&
-        col("month2") === col("month"),
+          col("year2") === col("year") &&
+          col("month2") === col("month"),
         "inner"
       )
-      .drop("game2","year2","month2")
+      .drop("game2", "year2", "month2")
 
   lDfTwitchEsportByMonth.show(false)
+
+
+  // Moyenne sur les 5 dernieres années sur le jeu
+  // Trier tout les jeux par genre (esport)
 
 }
