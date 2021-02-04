@@ -5,14 +5,14 @@ import org.apache.spark.sql.functions.col
 import sparkGamingUtils._
 
 object sparkGaming extends App{
-  val config = ConfigFactory.parseFile(new File("/home/sandy/my.conf"))
+  val lConf = ConfigFactory.load("sparkGaming.conf")
 
-  val lOutput = "D:\\M1\\Spark\\output"
+  val lOutputTwitchEsportByMonth = lConf.getString("output.twitch_esport_by_month")
 
-  val lDatasetEsportHistorical = "D:\\M1\\Spark\\Projet\\sparkGaming\\src\\main\\ressources\\data\\esport\\HistoricalEsportData.csv"
-  val lDatasetEsportGeneral = "D:\\M1\\Spark\\Projet\\sparkGaming\\src\\main\\ressources\\data\\esport\\GeneralEsportData.csv"
-  val lDatasetTwitchGameData = "D:\\M1\\Spark\\Projet\\sparkGaming\\src\\main\\ressources\\data\\twitch\\Twitch_game_data.csv"
-  val lDatasetTwitchGlobalData = "D:\\M1\\Spark\\Projet\\sparkGaming\\src\\main\\ressources\\data\\twitch\\Twitch_global_data.csv"
+  val lDatasetEsportHistorical = lConf.getString("dataset.esport_historical")
+  val lDatasetEsportGeneral = lConf.getString("dataset.esport_general")
+  val lDatasetTwitchGameData = lConf.getString("dataset.twitch_game_data")
+  val lDatasetTwitchGlobalData = lConf.getString("dataset.twitch_global_data")
 
   val spark =
     SparkSession
@@ -53,5 +53,5 @@ object sparkGaming extends App{
 
   // Moyenne sur les 5 dernieres années sur le jeu
   // Trier tout les jeux par genre (esport)
-
+  saveCsvFromDataframe(lOutputTwitchEsportByMonth, lDfTwitchEsportByMonth)
 }

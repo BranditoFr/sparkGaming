@@ -10,4 +10,13 @@ object sparkGamingUtils {
       .option("header", true)
       .csv(iPath)
   }
+
+  def saveCsvFromDataframe(iOutputPath:String, iDf: DataFrame): Unit = {
+    iDf
+      .write
+      .format("csv")
+      .mode("overwrite")
+      .option("header",true)
+      .save(iOutputPath)
+  }
 }
