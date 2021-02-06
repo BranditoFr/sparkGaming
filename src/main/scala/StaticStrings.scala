@@ -1,0 +1,25 @@
+/** All columns name **/
+
+object StaticStrings {
+  val sDate: String = "date"
+  val sGame: String = "game"
+  val sYear: String = "year"
+  val sMonth: String = "month"
+  val sGenre: String = "genre"
+  val sTotalEarnings: String = "TotalEarnings"
+  val sOnlineEarnings: String = "OnlineEarnings"
+  val sTotalPlayers: String = "TotalPlayers"
+  val sTotalTournaments: String = "TotalTournaments"
+  val sHoursWatched: String = "Hours_watched"
+  val sHoursStreamed: String = "Hours_Streamed"
+  val sPeakViewers: String = "Peak_viewers"
+  val sPeakChannels: String = "Peak_channels"
+  val sStreamers: String = "Streamers"
+  val sAvgViewers: String = "Avg_viewers"
+  val sAvgChannels: String = "Avg_channels"
+  val sAvgViewerRatio: String = "Avg_viewer_ratio"
+  val sRank: String = "Rank"
+  val sEarnings: String = "Earnings"
+  val sPlayers: String = "Players"
+  val sTournaments: String = "Tournaments"
+}
