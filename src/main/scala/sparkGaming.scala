@@ -26,6 +26,9 @@ object sparkGaming {
 
     val lOutputPathTwitchEsportByMonth: String = lConf.getString("output.twitch_esport_by_month")
     val lOutputPathStatsEsportByGenre: String = lConf.getString("output.stats_esport_by_genre")
+    val lOutputPathAverageByYear: String = lConf.getString("output.average_by_year")
+    val lOutputPathTwitchByGenre: String = lConf.getString("output.twitch_by_genre")
+    val lOutputPathDataByGenre: String = lConf.getString("output.data_by_genre")
 
     val lDatasetEsportHistorical: String = lConf.getString("dataset.esport_historical")
     val lDatasetEsportGeneral: String = lConf.getString("dataset.esport_general")
@@ -57,14 +60,19 @@ object sparkGaming {
           sum(sTotalEarnings).alias(s"""sum_$sTotalEarnings"""),
           sum(sOnlineEarnings).alias(s"""sum_$sOnlineEarnings"""),
           sum(sTotalPlayers).alias(s"""sum_$sTotalPlayers"""),
-          sum(sTotalTournaments).alias(s"""sum_$sTotalTournaments""")
+          sum(sTotalTournaments).alias(s"""sum_$sTotalTournaments"""),
+          bround(avg(sTotalEarnings)).alias(s"""avg_$sTotalEarnings"""),
+          bround(avg(sOnlineEarnings)).alias(s"""avg_$sOnlineEarnings"""),
+          bround(avg(sTotalPlayers)).alias(s"""avg_$sTotalPlayers"""),
+          bround(avg(sTotalTournaments)).alias(s"""avg_$sTotalTournaments""")
         )
 
+    println("lEsportByGenreDF - filter earning by esport genre")
     lEsportByGenreDF.show(false)
 
     saveCsvFromDataframe(lOutputPathStatsEsportByGenre, lEsportByGenreDF)
 
-    /**  stats twitch and esport join by month */
+    /**  stats twitch and esport join by month and game */
     val lTwitchEsportByMonthDF: DataFrame =
       lEsportHistoricalDF
         .filter(col(sDate) >= lDateMin)
@@ -80,12 +88,12 @@ object sparkGaming {
         )
         .drop("game2", "year2", "month2")
 
+    println("lTwitchEsportByMonthDF - stats twitch and esport join by month")
     lTwitchEsportByMonthDF.show(false)
 
     saveCsvFromDataframe(lOutputPathTwitchEsportByMonth, lTwitchEsportByMonthDF)
 
     /** average on games by year (esport + twitch) */
-    // Par game + année OU/ET que par année OU/ET que par jeu ????
 
     val lAverageByYearDF: DataFrame =
       lTwitchEsportByMonthDF
@@ -107,10 +115,13 @@ object sparkGaming {
           bround(avg(sHoursWatched),0).alias(s"""avg_$sHoursWatched"""),
           bround(avg(sHoursStreamed),0).alias(s"""avg_$sHoursStreamed""")
         )
-
+    println("lAverageByYearDF - average on games by year (esport + twitch)")
     lAverageByYearDF.show(false)
 
+    saveCsvFromDataframe(lOutputPathAverageByYear, lAverageByYearDF)
+
     // essayer de rajouter les type de jeu d'esport dans le df de twitch pour trier par type sur twitch
+    /** Twitch by genre */
     val lTwitchByGenreDF =
       lTwitchGameDataDF
         .withColumn(sHoursWatched, col(sHoursWatched).cast(IntegerType))
@@ -121,13 +132,22 @@ object sparkGaming {
         .agg(
           bround(sum(sHoursWatched),0).alias(s"""sum_$sHoursWatched"""),
           bround(sum(sHoursStreamed),0).alias(s"""sum_$sHoursStreamed"""),
+          bround(sum(sStreamers),0).alias(s"""sum_$sStreamers"""),
           bround(avg(sHoursWatched),0).alias(s"""avg_$sHoursWatched"""),
-          bround(avg(sHoursStreamed),0).alias(s"""avg_$sHoursStreamed""")
-        )
+          bround(avg(sStreamers),0).alias(s"""avg_$sStreamers"""),
+          bround(avg(sPeakViewers),0).alias(s"""avg_$sPeakViewers"""),
+          bround(avg(sPeakChannels),0).alias(s"""avg_$sPeakChannels"""),
+          bround(sum(sAvgViewers),0).alias(s"""avg_$sAvgViewers"""),
+          bround(sum(sAvgChannels),0).alias(s"""avg_$sAvgChannels""")
 
+        )
+    println("lTwitchByGenreDF - filter twitch genre")
     lTwitchByGenreDF.show(false)
 
-    val lDataByGenre: DataFrame =
+    saveCsvFromDataframe(lOutputPathTwitchByGenre, lTwitchByGenreDF)
+
+    /** All data esport + twitch join by genre */
+    val lDataByGenreDF: DataFrame =
       lTwitchByGenreDF
         .join(
           lEsportByGenreDF
@@ -136,14 +156,37 @@ object sparkGaming {
               col(s"""sum_$sTotalEarnings"""),
               col(s"""sum_$sOnlineEarnings"""),
               col(s"""sum_$sTotalPlayers"""),
-              col(s"""sum_$sTotalTournaments""")
+              col(s"""sum_$sTotalTournaments"""),
+              col(s"""avg_$sTotalEarnings"""),
+              col(s"""avg_$sOnlineEarnings"""),
+              col(s"""avg_$sTotalPlayers"""),
+              col(s"""avg_$sTotalTournaments""")
             ),
           col(sGenre) === col("genre2"),
           "inner")
         .drop("genre2")
 
-    lDataByGenre.show(false)
+    println("lDataByGenre - alls data by genre")
+    lDataByGenreDF.show(false)
 
-    // ajouter sum total par jeu sur twitch
+    saveCsvFromDataframe(lOutputPathDataByGenre, lDataByGenreDF)
+    /**twitch group by game */
+
+    val lTwitchByGameDF: DataFrame =
+      lTwitchGameDataDF
+        .groupBy(sGame)
+        .agg(
+          bround(sum(sHoursWatched),0).alias(s"""sum_$sHoursWatched"""),
+          bround(sum(sHoursStreamed),0).alias(s"""sum_$sHoursStreamed"""),
+          bround(avg(sHoursWatched),0).alias(s"""avg_$sHoursWatched"""),
+          bround(avg(sHoursStreamed),0).alias(s"""avg_$sHoursStreamed"""),
+          bround(avg(sAvgChannels),0).alias(s"""avg_$sAvgChannels"""),
+          bround(avg(sAvgViewers),0).alias(s"""avg_$sAvgViewers""")
+        )
+
+    println("lTwitchByGameDF - twitch group by game")
+    lTwitchByGameDF.show(false)
+
+    saveCsvFromDataframe(lOutputPathDataByGenre, lTwitchByGameDF)
   }
 }

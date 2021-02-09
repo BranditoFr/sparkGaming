@@ -7,6 +7,7 @@ object sparkGamingUtils {
 
   def readFromCsv(iPath: String): DataFrame = {
     if (Files.exists(Paths.get(iPath))) {
+      print(s"""read from "$iPath"""")
       mSpark
         .read
         .option("header", true)
@@ -26,6 +27,8 @@ object sparkGamingUtils {
         .mode("overwrite")
         .option("header", true)
         .save(iOutputPath)
+
+      print(s"""save as csv in "$iOutputPath"""")
     }
   }
 }
